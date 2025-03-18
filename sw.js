@@ -2,21 +2,21 @@
 
 const CACHE_NAME = 'madrasa-sikariya-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/donation.html',
-  '/question-and-answer.html',
-  '/css/style.css',
-  '/js/main.js',
-  '/js/script.js',
-  '/manifest.json',
-  '/image/icon1.png',
-  '/image/icon madrsa.jpg',
-  '/image slide/inside front.jpg',
-  '/image slide/inside intro.jpg',
-  '/image slide/inside view.jpg',
-  '/image slide/inside2.jpg',
-  '/image slide/inside4.jpg'
+  './',
+  './index.html',
+  './donation.html',
+  './question-and-answer.html',
+  './css/style.css',
+  './js/main.js',
+  './js/script.js',
+  './manifest.json',
+  './image/icon1.png',
+  './image/icon madrsa.jpg',
+  './image slide/inside front.jpg',
+  './image slide/inside intro.jpg',
+  './image slide/inside view.jpg',
+  './image slide/inside2.jpg',
+  './image slide/inside4.jpg'
 ];
 
 // Install event - cache assets
@@ -76,7 +76,12 @@ self.addEventListener('fetch', (event) => {
 
             return response;
           }
-        );
+        ).catch(() => {
+          // If fetch fails, return a fallback response for HTML files
+          if (event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('./index.html');
+          }
+        });
       })
   );
 });
