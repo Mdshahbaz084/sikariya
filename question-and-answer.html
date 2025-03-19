@@ -807,7 +807,7 @@
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, doc, updateDoc, getDoc, startAfter, deleteDoc, setDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, doc, updateDoc, getDoc, startAfter, deleteDoc, setDoc, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Firebase Config
         const firebaseConfig = {
@@ -1053,6 +1053,7 @@
             const user = auth.currentUser;
 
             if (user) {
+                const submitButton = e.target.querySelector('button[type="submit"]');
                 await addDoc(collection(db, "questions"), {
                     text: questionText,
                     user: user.displayName,
@@ -1064,8 +1065,8 @@
                 document.getElementById("questionInput").value = "";
                 loadQuestions();
                 
-                // Show notification
-                showNotification("Question Posted", "Your question has been successfully posted!");
+                // Show notification near the submit button
+                showNotification("Question Posted", "Your question has been successfully posted!", submitButton);
             } else {
                 alert("Please login to ask a question.");
             }
@@ -1081,65 +1082,66 @@
             document.getElementById("loading").style.display = "block";
             
             try {
+                // Create a real-time listener for questions
                 const q = query(
                     collection(db, "questions"), 
                     orderBy("timestamp", "desc")
                 );
 
-                const querySnapshot = await getDocs(q);
-                
-                if (querySnapshot.empty) {
-                    document.getElementById("loading").style.display = "none";
-                    return;
-                }
-                
-                document.getElementById("questionsList").innerHTML = "";
-                
-                querySnapshot.forEach((doc) => {
-                    const question = doc.data();
+                // Set up real-time listener
+                const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                    document.getElementById("questionsList").innerHTML = "";
                     
-                    document.getElementById("questionsList").innerHTML += `
-                        <div class="question" id="question-${doc.id}">
-                            <div class="question-header">
-                                <small>${new Date(question.timestamp.toDate()).toLocaleString()}</small>
-                            </div>
-                            <p class="question-text"><strong>${question.user}:</strong> ${question.text}</p>
-                            <div class="vote-buttons">
-                                <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'up')"><i class="material-icons">thumb_up</i></button>
-                                <span class="vote-count" id="question-votes-${doc.id}">${question.votes || 0}</span>
-                                <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'down')"><i class="material-icons">thumb_down</i></button>
-                            </div>
-                            <div class="share-buttons">
-                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'copy')"><i class="material-icons">content_copy</i> Copy Link</button>
-                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'facebook')"><i class="material-icons">share</i> Facebook</button>
-                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'twitter')"><i class="material-icons">send</i> Twitter</button>
-                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'whatsapp')"><i class="material-icons">chat</i> WhatsApp</button>
-                            </div>
-                            <div class="action-buttons" id="question-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === question.userId || auth.currentUser.displayName === question.user) ? '' : 'style="display:none"'}>
-                                <button class="edit-btn" onclick="showEditQuestionForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
-                                <button class="delete-btn" onclick="deleteQuestion('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
-                            </div>
-                            <div class="edit-form" id="edit-question-form-${doc.id}">
-                                <textarea class="edit-input" id="edit-question-input-${doc.id}">${question.text}</textarea>
-                                <div class="edit-actions">
-                                    <button class="save-edit-btn" onclick="saveQuestionEdit('${doc.id}')">Save</button>
-                                    <button class="cancel-edit-btn" onclick="cancelQuestionEdit('${doc.id}')">Cancel</button>
+                    querySnapshot.forEach((doc) => {
+                        const question = doc.data();
+                        
+                        document.getElementById("questionsList").innerHTML += `
+                            <div class="question" id="question-${doc.id}">
+                                <div class="question-header">
+                                    <small>${new Date(question.timestamp.toDate()).toLocaleString()}</small>
                                 </div>
+                                <p class="question-text"><strong>${question.user}:</strong> ${question.text}</p>
+                                <div class="vote-buttons">
+                                    <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'up')"><i class="material-icons">thumb_up</i></button>
+                                    <span class="vote-count" id="question-votes-${doc.id}">${question.votes || 0}</span>
+                                    <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'down')"><i class="material-icons">thumb_down</i></button>
+                                </div>
+                                <div class="share-buttons">
+                                    <button class="share-btn" onclick="shareQuestion('${doc.id}', 'copy')"><i class="material-icons">content_copy</i> Copy Link</button>
+                                    <button class="share-btn" onclick="shareQuestion('${doc.id}', 'facebook')"><i class="material-icons">share</i> Facebook</button>
+                                    <button class="share-btn" onclick="shareQuestion('${doc.id}', 'twitter')"><i class="material-icons">send</i> Twitter</button>
+                                    <button class="share-btn" onclick="shareQuestion('${doc.id}', 'whatsapp')"><i class="material-icons">chat</i> WhatsApp</button>
+                                </div>
+                                <div class="action-buttons" id="question-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === question.userId || auth.currentUser.displayName === question.user) ? '' : 'style="display:none"'}>
+                                    <button class="edit-btn" onclick="showEditQuestionForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
+                                    <button class="delete-btn" onclick="deleteQuestion('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
+                                </div>
+                                <div class="edit-form" id="edit-question-form-${doc.id}">
+                                    <textarea class="edit-input" id="edit-question-input-${doc.id}">${question.text}</textarea>
+                                    <div class="edit-actions">
+                                        <button class="save-edit-btn" onclick="saveQuestionEdit('${doc.id}')">Save</button>
+                                        <button class="cancel-edit-btn" onclick="cancelQuestionEdit('${doc.id}')">Cancel</button>
+                                    </div>
+                                </div>
+                                <input type="text" id="answerInput-${doc.id}" class="answer-input" placeholder="Write an answer">
+                                <button class="answer-btn" onclick="submitAnswer('${doc.id}')">Submit</button>
+                                <div id="answers-${doc.id}" class="answers"></div>
                             </div>
-                            <input type="text" id="answerInput-${doc.id}" class="answer-input" placeholder="Write an answer">
-                            <button class="answer-btn" onclick="submitAnswer('${doc.id}')">Submit</button>
-                            <div id="answers-${doc.id}" class="answers"></div>
-                        </div>
-                    `;
-                    loadAnswers(doc.id);
+                        `;
+                        loadAnswers(doc.id);
+                    });
+                    
+                    document.getElementById("loading").style.display = "none";
+                    
+                    // Update action buttons visibility after loading questions
+                    if (auth.currentUser) {
+                        updateActionButtonsVisibility();
+                    }
                 });
                 
-                document.getElementById("loading").style.display = "none";
+                // Store unsubscribe function for cleanup
+                window.unsubscribeQuestions = unsubscribe;
                 
-                // Update action buttons visibility after loading questions
-                if (auth.currentUser) {
-                    updateActionButtonsVisibility();
-                }
             } catch (error) {
                 console.error("Error loading questions:", error);
                 document.getElementById("loading").style.display = "none";
@@ -1152,6 +1154,7 @@
             const user = auth.currentUser;
 
             if (user) {
+                const submitButton = document.querySelector(`button[onclick="submitAnswer('${questionId}')"]`);
                 await addDoc(collection(db, "answers"), {
                     questionId: questionId,
                     text: answerText,
@@ -1164,26 +1167,8 @@
                 document.getElementById(`answerInput-${questionId}`).value = "";
                 loadAnswers(questionId);
                 
-                // Get the original question to find the author
-                const questionRef = doc(db, "questions", questionId);
-                const questionSnap = await getDoc(questionRef);
-                
-                if (questionSnap.exists()) {
-                    const questionData = questionSnap.data();
-                    
-                    // Send email notification to question author (if they're not the same person answering)
-                    if (questionData.user !== user.displayName) {
-                        // In a real-world application, you would look up the user ID by their display name
-                        // For this demo, we're simulating the notification
-                        console.log(`Sending notification about new answer to ${questionData.user}`);
-                        
-                        showNotification("Email Notification", 
-                            `An email notification would be sent to ${questionData.user} about your answer.`);
-                    }
-                }
-                
-                // Show notification
-                showNotification("Answer Posted", "Your answer has been successfully posted!");
+                // Show notification near the submit button
+                showNotification("Answer Posted", "Your answer has been successfully posted!", submitButton);
             } else {
                 alert("Please login to answer.");
             }
@@ -1191,13 +1176,18 @@
 
         // 🔹 Load Answers for a Question
         async function loadAnswers(questionId) {
-            let q = query(collection(db, "answers"), orderBy("timestamp", "desc"));
-            const querySnapshot = await getDocs(q);
-            document.getElementById(`answers-${questionId}`).innerHTML = "";
+            const q = query(
+                collection(db, "answers"),
+                where("questionId", "==", questionId),
+                orderBy("timestamp", "desc")
+            );
 
-            querySnapshot.forEach((doc) => {
-                const answer = doc.data();
-                if (answer.questionId === questionId) {
+            // Set up real-time listener for answers
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                document.getElementById(`answers-${questionId}`).innerHTML = "";
+
+                querySnapshot.forEach((doc) => {
+                    const answer = doc.data();
                     document.getElementById(`answers-${questionId}`).innerHTML += `
                         <div class="answer" id="answer-${doc.id}">
                             <p class="answer-text"><strong>${answer.user}:</strong> ${answer.text}</p>
@@ -1208,7 +1198,7 @@
                             </div>
                             <div class="action-buttons" id="answer-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === answer.userId || auth.currentUser.displayName === answer.user) ? '' : 'style="display:none"'}>
                                 <button class="edit-btn" onclick="showEditAnswerForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
-                                <button class="delete-btn" onclick="deleteAnswer('${doc.id}', '${questionId}')"><i class="material-icons">delete</i> Delete</button>
+                                <button class="delete-btn" onclick="deleteAnswer('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
                             </div>
                             <div class="edit-form" id="edit-answer-form-${doc.id}">
                                 <textarea class="edit-input" id="edit-answer-input-${doc.id}">${answer.text}</textarea>
@@ -1219,15 +1209,21 @@
                             </div>
                         </div>
                     `;
+                });
+                
+                // Update action buttons visibility for answers
+                if (auth.currentUser) {
+                    setTimeout(() => {
+                        updateActionButtonsVisibility();
+                    }, 100);
                 }
             });
-            
-            // Update action buttons visibility for answers
-            if (auth.currentUser) {
-                setTimeout(() => {
-                    updateActionButtonsVisibility();
-                }, 100);
+
+            // Store unsubscribe function in a map using questionId as key
+            if (!window.unsubscribeAnswers) {
+                window.unsubscribeAnswers = new Map();
             }
+            window.unsubscribeAnswers.set(questionId, unsubscribe);
         }
 
         // Notification functions
@@ -1278,155 +1274,155 @@
         };
 
         // Vote functions - copy and paste these into your question-and-answer.html file
-window.voteQuestion = async (questionId, voteType) => {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login to vote");
-        return;
-    }
+        window.voteQuestion = async (questionId, voteType) => {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Please login to vote");
+                return;
+            }
 
-    try {
-        const questionRef = doc(db, "questions", questionId);
-        const questionSnap = await getDoc(questionRef);
-        
-        if (questionSnap.exists()) {
-            const questionData = questionSnap.data();
-            const currentVotes = questionData.votes || 0;
-            const userVotes = questionData.userVotes || {};
-            
-            console.log("Voting on question:", questionId);
-            console.log("Current user:", user.uid);
-            
-            // Check if user already voted
-            if (userVotes[user.uid] === voteType) {
-                // User is removing their vote
-                delete userVotes[user.uid];
-                await updateDoc(questionRef, {
-                    votes: voteType === 'up' ? currentVotes - 1 : currentVotes + 1,
-                    userVotes: userVotes
-                });
-            } else if (userVotes[user.uid]) {
-                // User is changing their vote
-                userVotes[user.uid] = voteType;
-                const voteDiff = voteType === 'up' ? 2 : -2; // +2 for down->up, -2 for up->down
-                await updateDoc(questionRef, {
-                    votes: currentVotes + voteDiff,
-                    userVotes: userVotes
-                });
-            } else {
-                // New vote
-                userVotes[user.uid] = voteType;
-                await updateDoc(questionRef, {
-                    votes: voteType === 'up' ? currentVotes + 1 : currentVotes - 1,
-                    userVotes: userVotes
-                });
+            try {
+                const questionRef = doc(db, "questions", questionId);
+                const questionSnap = await getDoc(questionRef);
+                
+                if (questionSnap.exists()) {
+                    const questionData = questionSnap.data();
+                    const currentVotes = questionData.votes || 0;
+                    const userVotes = questionData.userVotes || {};
+                    
+                    console.log("Voting on question:", questionId);
+                    console.log("Current user:", user.uid);
+                    
+                    // Check if user already voted
+                    if (userVotes[user.uid] === voteType) {
+                        // User is removing their vote
+                        delete userVotes[user.uid];
+                        await updateDoc(questionRef, {
+                            votes: voteType === 'up' ? currentVotes - 1 : currentVotes + 1,
+                            userVotes: userVotes
+                        });
+                    } else if (userVotes[user.uid]) {
+                        // User is changing their vote
+                        userVotes[user.uid] = voteType;
+                        const voteDiff = voteType === 'up' ? 2 : -2; // +2 for down->up, -2 for up->down
+                        await updateDoc(questionRef, {
+                            votes: currentVotes + voteDiff,
+                            userVotes: userVotes
+                        });
+                    } else {
+                        // New vote
+                        userVotes[user.uid] = voteType;
+                        await updateDoc(questionRef, {
+                            votes: voteType === 'up' ? currentVotes + 1 : currentVotes - 1,
+                            userVotes: userVotes
+                        });
+                    }
+                    
+                    // Show notification for votes
+                    const voteBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', '${voteType}')"]`);
+                    showNotification(
+                        "Vote Recorded", 
+                        `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this question.`,
+                        voteBtn
+                    );
+                    
+                    // Update UI
+                    document.getElementById(`question-votes-${questionId}`).textContent = 
+                        questionData.votes + (voteType === 'up' ? 1 : -1);
+                    
+                    // Update vote button styles
+                    const upBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', 'up')"]`);
+                    const downBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', 'down')"]`);
+                    
+                    upBtn.classList.remove('upvoted');
+                    downBtn.classList.remove('downvoted');
+                    
+                    if (userVotes[user.uid] === 'up') {
+                        upBtn.classList.add('upvoted');
+                    } else if (userVotes[user.uid] === 'down') {
+                        downBtn.classList.add('downvoted');
+                    }
+                }
+            } catch (error) {
+                console.error("Error voting on question:", error);
+                alert("Error recording vote: " + error.message);
             }
-            
-            // Show notification for votes
-            const voteBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', '${voteType}')"]`);
-            showNotification(
-                "Vote Recorded", 
-                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this question.`,
-                voteBtn
-            );
-            
-            // Update UI
-            document.getElementById(`question-votes-${questionId}`).textContent = 
-                questionData.votes + (voteType === 'up' ? 1 : -1);
-            
-            // Update vote button styles
-            const upBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', 'up')"]`);
-            const downBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', 'down')"]`);
-            
-            upBtn.classList.remove('upvoted');
-            downBtn.classList.remove('downvoted');
-            
-            if (userVotes[user.uid] === 'up') {
-                upBtn.classList.add('upvoted');
-            } else if (userVotes[user.uid] === 'down') {
-                downBtn.classList.add('downvoted');
-            }
-        }
-    } catch (error) {
-        console.error("Error voting on question:", error);
-        alert("Error recording vote: " + error.message);
-    }
-};
+        };
 
-window.voteAnswer = async (answerId, voteType) => {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login to vote");
-        return;
-    }
+        window.voteAnswer = async (answerId, voteType) => {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Please login to vote");
+                return;
+            }
 
-    try {
-        const answerRef = doc(db, "answers", answerId);
-        const answerSnap = await getDoc(answerRef);
-        
-        if (answerSnap.exists()) {
-            const answerData = answerSnap.data();
-            const currentVotes = answerData.votes || 0;
-            const userVotes = answerData.userVotes || {};
-            
-            console.log("Voting on answer:", answerId);
-            console.log("Current user:", user.uid);
-            
-            // Check if user already voted
-            if (userVotes[user.uid] === voteType) {
-                // User is removing their vote
-                delete userVotes[user.uid];
-                await updateDoc(answerRef, {
-                    votes: voteType === 'up' ? currentVotes - 1 : currentVotes + 1,
-                    userVotes: userVotes
-                });
-            } else if (userVotes[user.uid]) {
-                // User is changing their vote
-                userVotes[user.uid] = voteType;
-                const voteDiff = voteType === 'up' ? 2 : -2; // +2 for down->up, -2 for up->down
-                await updateDoc(answerRef, {
-                    votes: currentVotes + voteDiff,
-                    userVotes: userVotes
-                });
-            } else {
-                // New vote
-                userVotes[user.uid] = voteType;
-                await updateDoc(answerRef, {
-                    votes: voteType === 'up' ? currentVotes + 1 : currentVotes - 1,
-                    userVotes: userVotes
-                });
+            try {
+                const answerRef = doc(db, "answers", answerId);
+                const answerSnap = await getDoc(answerRef);
+                
+                if (answerSnap.exists()) {
+                    const answerData = answerSnap.data();
+                    const currentVotes = answerData.votes || 0;
+                    const userVotes = answerData.userVotes || {};
+                    
+                    console.log("Voting on answer:", answerId);
+                    console.log("Current user:", user.uid);
+                    
+                    // Check if user already voted
+                    if (userVotes[user.uid] === voteType) {
+                        // User is removing their vote
+                        delete userVotes[user.uid];
+                        await updateDoc(answerRef, {
+                            votes: voteType === 'up' ? currentVotes - 1 : currentVotes + 1,
+                            userVotes: userVotes
+                        });
+                    } else if (userVotes[user.uid]) {
+                        // User is changing their vote
+                        userVotes[user.uid] = voteType;
+                        const voteDiff = voteType === 'up' ? 2 : -2; // +2 for down->up, -2 for up->down
+                        await updateDoc(answerRef, {
+                            votes: currentVotes + voteDiff,
+                            userVotes: userVotes
+                        });
+                    } else {
+                        // New vote
+                        userVotes[user.uid] = voteType;
+                        await updateDoc(answerRef, {
+                            votes: voteType === 'up' ? currentVotes + 1 : currentVotes - 1,
+                            userVotes: userVotes
+                        });
+                    }
+                    
+                    // Show notification for votes
+                    const voteBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', '${voteType}')"]`);
+                    showNotification(
+                        "Vote Recorded", 
+                        `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this answer.`,
+                        voteBtn
+                    );
+                    
+                    // Update UI
+                    document.getElementById(`answer-votes-${answerId}`).textContent = 
+                        answerData.votes + (voteType === 'up' ? 1 : -1);
+                    
+                    // Update vote button styles
+                    const upBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', 'up')"]`);
+                    const downBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', 'down')"]`);
+                    
+                    upBtn.classList.remove('upvoted');
+                    downBtn.classList.remove('downvoted');
+                    
+                    if (userVotes[user.uid] === 'up') {
+                        upBtn.classList.add('upvoted');
+                    } else if (userVotes[user.uid] === 'down') {
+                        downBtn.classList.add('downvoted');
+                    }
+                }
+            } catch (error) {
+                console.error("Error voting on answer:", error);
+                alert("Error recording vote: " + error.message);
             }
-            
-            // Show notification for votes
-            const voteBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', '${voteType}')"]`);
-            showNotification(
-                "Vote Recorded", 
-                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this answer.`,
-                voteBtn
-            );
-            
-            // Update UI
-            document.getElementById(`answer-votes-${answerId}`).textContent = 
-                answerData.votes + (voteType === 'up' ? 1 : -1);
-            
-            // Update vote button styles
-            const upBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', 'up')"]`);
-            const downBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', 'down')"]`);
-            
-            upBtn.classList.remove('upvoted');
-            downBtn.classList.remove('downvoted');
-            
-            if (userVotes[user.uid] === 'up') {
-                upBtn.classList.add('upvoted');
-            } else if (userVotes[user.uid] === 'down') {
-                downBtn.classList.add('downvoted');
-            }
-        }
-    } catch (error) {
-        console.error("Error voting on answer:", error);
-        alert("Error recording vote: " + error.message);
-    }
-};
+        };
 
         // Auto-save draft functionality
         let draftTimer;
@@ -1542,62 +1538,31 @@ window.voteAnswer = async (answerId, voteType) => {
                 return;
             }
 
-            // Confirm deletion
             if (!confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
                 return;
             }
 
             try {
-                // Get question reference
                 const questionRef = doc(db, "questions", questionId);
                 const questionSnap = await getDoc(questionRef);
                 
                 if (questionSnap.exists()) {
                     const questionData = questionSnap.data();
                     
-                    console.log("Deleting question:", questionId);
-                    console.log("Current user:", user.uid);
-                    console.log("Question data:", questionData);
-                    
-                    // Verify the current user is the author
                     if (!(questionData.userId === user.uid || questionData.user === user.displayName)) {
                         alert("You can only delete your own questions.");
                         return;
                     }
                     
-                    // If this is an older question without userId, add it now
-                    if (!questionData.userId) {
-                        console.log("Adding userId to question before deleting");
-                        try {
-                            await updateDoc(questionRef, {
-                                userId: user.uid
-                            });
-                            console.log("userId added successfully");
-                        } catch (error) {
-                            console.error("Error adding userId:", error);
-                            alert("Error updating question. Please try again.");
-                            return;
-                        }
-                    }
+                    const deleteButton = document.querySelector(`button[onclick="deleteQuestion('${questionId}')"]`);
+                    await deleteDoc(questionRef);
                     
-                    // Delete the question
-                    try {
-                        await deleteDoc(questionRef);
-                        console.log("Question deleted successfully");
-                        
-                        // Remove from UI
-                        const questionElement = document.getElementById(`question-${questionId}`);
-                        questionElement.remove();
-                        
-                        showNotification("Question Deleted", "Your question has been successfully deleted!");
-                    } catch (error) {
-                        console.error("Error deleting question:", error);
-                        alert("Error deleting question: " + error.message);
-                    }
+                    // Show notification near the delete button
+                    showNotification("Question Deleted", "Your question has been successfully deleted!", deleteButton);
                 }
             } catch (error) {
-                console.error("Error in deleteQuestion:", error);
-                alert("An error occurred: " + error.message);
+                console.error("Error deleting question:", error);
+                alert("Error deleting question: " + error.message);
             }
         };
 
@@ -1670,62 +1635,31 @@ window.voteAnswer = async (answerId, voteType) => {
                 return;
             }
 
-            // Confirm deletion
             if (!confirm("Are you sure you want to delete this answer? This action cannot be undone.")) {
                 return;
             }
 
             try {
-                // Get answer reference
                 const answerRef = doc(db, "answers", answerId);
                 const answerSnap = await getDoc(answerRef);
                 
                 if (answerSnap.exists()) {
                     const answerData = answerSnap.data();
                     
-                    console.log("Deleting answer:", answerId);
-                    console.log("Current user:", user.uid);
-                    console.log("Answer data:", answerData);
-                    
-                    // Verify the current user is the author
                     if (!(answerData.userId === user.uid || answerData.user === user.displayName)) {
                         alert("You can only delete your own answers.");
                         return;
                     }
                     
-                    // If this is an older answer without userId, add it now
-                    if (!answerData.userId) {
-                        console.log("Adding userId to answer before deleting");
-                        try {
-                            await updateDoc(answerRef, {
-                                userId: user.uid
-                            });
-                            console.log("userId added successfully to answer");
-                        } catch (error) {
-                            console.error("Error adding userId to answer:", error);
-                            alert("Error updating answer. Please try again.");
-                            return;
-                        }
-                    }
+                    const deleteButton = document.querySelector(`button[onclick="deleteAnswer('${answerId}')"]`);
+                    await deleteDoc(answerRef);
                     
-                    // Delete the answer
-                    try {
-                        await deleteDoc(answerRef);
-                        console.log("Answer deleted successfully");
-                        
-                        // Remove from UI
-                        const answerElement = document.getElementById(`answer-${answerId}`);
-                        answerElement.remove();
-                        
-                        showNotification("Answer Deleted", "Your answer has been successfully deleted!");
-                    } catch (error) {
-                        console.error("Error deleting answer:", error);
-                        alert("Error deleting answer: " + error.message);
-                    }
+                    // Show notification near the delete button
+                    showNotification("Answer Deleted", "Your answer has been successfully deleted!", deleteButton);
                 }
             } catch (error) {
-                console.error("Error in deleteAnswer:", error);
-                alert("An error occurred: " + error.message);
+                console.error("Error deleting answer:", error);
+                alert("Error deleting answer: " + error.message);
             }
         };
 
@@ -1785,7 +1719,7 @@ window.voteAnswer = async (answerId, voteType) => {
                     navigator.clipboard.writeText(shareUrl)
                         .then(() => {
                             const copyBtn = document.querySelector(`button[onclick="shareQuestion('${questionId}', 'copy')"]`);
-                            showNotification("Link Copied", "Question link copied to clipboard!", copyBtn);
+                            showNotification("Link Copied", "clipboard!", copyBtn);
                         })
                         .catch(err => {
                             console.error('Could not copy text: ', err);
@@ -1854,64 +1788,6 @@ window.voteAnswer = async (answerId, voteType) => {
         // Load Initial Questions
         loadQuestions();
         
-        // 🔹 Answer Submit Function
-        document.getElementById('answerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Check if user is logged in
-            const user = auth.currentUser;
-            if (!user) {
-                alert("Please login to submit an answer");
-                return;
-            }
-            
-            // Get form values
-            const questionId = document.getElementById('questionId').value;
-            const answerText = document.getElementById('answerText').value;
-            
-            if (!answerText.trim()) {
-                alert("Please enter an answer");
-                return;
-            }
-            
-            const timestamp = new Date();
-            
-            try {
-                console.log("Submitting answer with user data:", {
-                    user: user.displayName,
-                    userId: user.uid
-                });
-                
-                // Add answer to Firestore
-                const docRef = await addDoc(collection(db, "answers"), {
-                    questionId: questionId,
-                    text: answerText,
-                    user: user.displayName,
-                    userId: user.uid,
-                    userPhoto: user.photoURL || 'https://via.placeholder.com/40',
-                    timestamp: timestamp
-                });
-                
-                console.log("Answer added with ID:", docRef.id);
-                
-                // Clear form
-                document.getElementById('answerText').value = '';
-                
-                // Close modal
-                document.getElementById('answerModal').style.display = 'none';
-                
-                // Refresh answers
-                loadAnswersForQuestion(questionId);
-                
-                showNotification("Answer Submitted", "Your answer has been submitted successfully!");
-            } catch (error) {
-                console.error("Error adding answer:", error);
-                alert("Error submitting answer: " + error.message);
-            }
-        });
-
-
-
         // Share functions
         function shareOnFacebook() {
             const url = encodeURIComponent(window.location.href);
@@ -1937,9 +1813,18 @@ window.voteAnswer = async (answerId, voteType) => {
                 alert("Could not copy link. Please try again.");
             });
         }
+
+        // Add cleanup function for when component unmounts
+        window.cleanupListeners = () => {
+            if (window.unsubscribeQuestions) {
+                window.unsubscribeQuestions();
+            }
+            if (window.unsubscribeAnswers) {
+                window.unsubscribeAnswers.forEach(unsubscribe => unsubscribe());
+                window.unsubscribeAnswers.clear();
+            }
+        };
     </script>
-    
-        
     
 </body>
 </html>
