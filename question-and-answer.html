@@ -210,38 +210,77 @@
         }
         
         .notification {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background-color: var(--primary-color);
+            position: absolute;
+            background: linear-gradient(135deg, var(--primary-color), #2c5282);
             color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 10px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             opacity: 0;
-            max-width: 350px;
-            width: 90%;
+            max-width: 300px;
+            width: auto;
             text-align: center;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%) scale(0.95);
+            margin-top: -10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .notification.show {
-            transform: translateX(-50%) translateY(0);
             opacity: 1;
+            transform: translateX(-50%) translateY(-100%) scale(1);
+        }
+        
+        .notification::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid var(--primary-color);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
         }
         
         .notification-title {
             font-weight: 600;
-            margin-bottom: 5px;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .notification-title::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm4.59-12.42L10 14.17l-2.59-2.58L6 13l4 4 8-8z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.9;
         }
         
         .notification-message {
-            font-size: 14px;
+            font-size: 13px;
+            margin: 0;
+            color: rgba(255,255,255,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            display: block;
         }
         
         .notification-close {
@@ -530,17 +569,9 @@
             }
             
             .notification {
-                width: 90%;
-                max-width: 300px;
-                padding: 12px 15px;
-            }
-            
-            .notification-title {
-                font-size: 14px;
-            }
-            
-            .notification-message {
-                font-size: 12px;
+                padding: 8px 12px;
+                max-width: 280px;
+                font-size: 13px;
             }
             
             .profile-section {
@@ -610,50 +641,24 @@
             }
         }
         
-        /* Additional mobile optimizations for very small screens */
         @media (max-width: 480px) {
-            .qa-container {
-                padding: 10px;
+            .notification {
+                padding: 6px 10px;
+                max-width: 240px;
+                font-size: 12px;
             }
             
-            .question-text, .answer-text {
-                font-size: 13px;
+            .notification-title {
+                font-size: 12px;
             }
             
-            .share-buttons {
-                gap: 5px;
-            }
-            
-            .share-btn {
-                padding: 4px 8px;
+            .notification-message {
                 font-size: 11px;
             }
             
-            .vote-buttons {
-                gap: 10px;
-            }
-            
-            .vote-btn {
-                padding: 6px;
-                font-size: 18px;
-            }
-            
-            .notification {
-                width: 95%;
-                padding: 10px 12px;
-            }
-            
-            .profile-avatar {
-                width: 50px;
-                height: 50px;
-            }
-            
-            .profile-info h3 {
-                font-size: 15px;
-            }
-            
-            .profile-info p {
-                font-size: 13px;
+            .notification-title::before {
+                width: 14px;
+                height: 14px;
             }
         }
         
@@ -1226,24 +1231,50 @@
         }
 
         // Notification functions
-        window.showNotification = (title, message) => {
-            document.getElementById('notification-title').textContent = title;
-            document.getElementById('notification-message').textContent = message;
-            const notification = document.getElementById('notification');
+        window.showNotification = (title, message, element, type = 'success') => {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
             
-            // Force a reflow to ensure animation works properly
-            notification.offsetHeight;
+            // Create a new notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-title">${title}</div>
+                <p class="notification-message">${message}</p>
+            `;
             
-            notification.classList.add('show');
+            // Position the notification relative to the clicked element
+            if (element) {
+                element.style.position = 'relative';
+                element.appendChild(notification);
+            } else {
+                // Fallback to body if no element provided
+                document.body.appendChild(notification);
+            }
             
-            // Auto-hide after 3 seconds
+            // Show the notification with a slight delay for better animation
+            requestAnimationFrame(() => {
+                notification.classList.add('show');
+            });
+            
+            // Auto-hide after 2 seconds
             setTimeout(() => {
-                closeNotification();
-            }, 3000);
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 400);
+            }, 2000);
         };
         
         window.closeNotification = () => {
-            document.getElementById('notification').classList.remove('show');
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(notification => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 400);
+            });
         };
 
         // Vote functions - copy and paste these into your question-and-answer.html file
@@ -1292,9 +1323,11 @@ window.voteQuestion = async (questionId, voteType) => {
             }
             
             // Show notification for votes
+            const voteBtn = document.querySelector(`button[onclick="voteQuestion('${questionId}', '${voteType}')"]`);
             showNotification(
                 "Vote Recorded", 
-                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this question.`
+                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this question.`,
+                voteBtn
             );
             
             // Update UI
@@ -1365,9 +1398,11 @@ window.voteAnswer = async (answerId, voteType) => {
             }
             
             // Show notification for votes
+            const voteBtn = document.querySelector(`button[onclick="voteAnswer('${answerId}', '${voteType}')"]`);
             showNotification(
                 "Vote Recorded", 
-                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this answer.`
+                `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this answer.`,
+                voteBtn
             );
             
             // Update UI
@@ -1749,7 +1784,8 @@ window.voteAnswer = async (answerId, voteType) => {
                 case 'copy':
                     navigator.clipboard.writeText(shareUrl)
                         .then(() => {
-                            showNotification("Link Copied", "Question link copied to clipboard!");
+                            const copyBtn = document.querySelector(`button[onclick="shareQuestion('${questionId}', 'copy')"]`);
+                            showNotification("Link Copied", "Question link copied to clipboard!", copyBtn);
                         })
                         .catch(err => {
                             console.error('Could not copy text: ', err);
