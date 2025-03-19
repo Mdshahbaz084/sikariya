@@ -1931,7 +1931,7 @@ window.voteAnswer = async (answerId, voteType) => {
         function copyToClipboard() {
             const url = window.location.href;
             navigator.clipboard.writeText(url).then(() => {
-                showNotification("Link Copied", "Website link copied to clipboard!");
+                showNotification("Link Copied", "clipboard!");
             }).catch(err => {
                 console.error('Could not copy text: ', err);
                 alert("Could not copy link. Please try again.");
