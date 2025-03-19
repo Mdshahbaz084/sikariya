@@ -1176,54 +1176,70 @@
 
         // 🔹 Load Answers for a Question
         async function loadAnswers(questionId) {
-            const q = query(
-                collection(db, "answers"),
-                where("questionId", "==", questionId),
-                orderBy("timestamp", "desc")
-            );
+            try {
+                // Create a simpler query without compound index
+                const q = query(
+                    collection(db, "answers"),
+                    where("questionId", "==", questionId)
+                );
 
-            // Set up real-time listener for answers
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                document.getElementById(`answers-${questionId}`).innerHTML = "";
+                // Set up real-time listener for answers
+                const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                    const answersContainer = document.getElementById(`answers-${questionId}`);
+                    if (!answersContainer) return;
+                    
+                    answersContainer.innerHTML = "";
+                    
+                    // Sort answers by timestamp locally
+                    const answers = [];
+                    querySnapshot.forEach((doc) => {
+                        answers.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Sort by timestamp descending
+                    answers.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
 
-                querySnapshot.forEach((doc) => {
-                    const answer = doc.data();
-                    document.getElementById(`answers-${questionId}`).innerHTML += `
-                        <div class="answer" id="answer-${doc.id}">
-                            <p class="answer-text"><strong>${answer.user}:</strong> ${answer.text}</p>
-                            <div class="vote-buttons">
-                                <button class="vote-btn" onclick="voteAnswer('${doc.id}', 'up')"><i class="material-icons">thumb_up</i></button>
-                                <span class="vote-count" id="answer-votes-${doc.id}">${answer.votes || 0}</span>
-                                <button class="vote-btn" onclick="voteAnswer('${doc.id}', 'down')"><i class="material-icons">thumb_down</i></button>
-                            </div>
-                            <div class="action-buttons" id="answer-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === answer.userId || auth.currentUser.displayName === answer.user) ? '' : 'style="display:none"'}>
-                                <button class="edit-btn" onclick="showEditAnswerForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
-                                <button class="delete-btn" onclick="deleteAnswer('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
-                            </div>
-                            <div class="edit-form" id="edit-answer-form-${doc.id}">
-                                <textarea class="edit-input" id="edit-answer-input-${doc.id}">${answer.text}</textarea>
-                                <div class="edit-actions">
-                                    <button class="save-edit-btn" onclick="saveAnswerEdit('${doc.id}', '${questionId}')">Save</button>
-                                    <button class="cancel-edit-btn" onclick="cancelAnswerEdit('${doc.id}')">Cancel</button>
+                    answers.forEach((answer) => {
+                        answersContainer.innerHTML += `
+                            <div class="answer" id="answer-${answer.id}">
+                                <p class="answer-text"><strong>${answer.user}:</strong> ${answer.text}</p>
+                                <div class="vote-buttons">
+                                    <button class="vote-btn" onclick="voteAnswer('${answer.id}', 'up')"><i class="material-icons">thumb_up</i></button>
+                                    <span class="vote-count" id="answer-votes-${answer.id}">${answer.votes || 0}</span>
+                                    <button class="vote-btn" onclick="voteAnswer('${answer.id}', 'down')"><i class="material-icons">thumb_down</i></button>
+                                </div>
+                                <div class="action-buttons" id="answer-actions-${answer.id}" ${auth.currentUser && (auth.currentUser.uid === answer.userId || auth.currentUser.displayName === answer.user) ? '' : 'style="display:none"'}>
+                                    <button class="edit-btn" onclick="showEditAnswerForm('${answer.id}')"><i class="material-icons">edit</i> Edit</button>
+                                    <button class="delete-btn" onclick="deleteAnswer('${answer.id}')"><i class="material-icons">delete</i> Delete</button>
+                                </div>
+                                <div class="edit-form" id="edit-answer-form-${answer.id}">
+                                    <textarea class="edit-input" id="edit-answer-input-${answer.id}">${answer.text}</textarea>
+                                    <div class="edit-actions">
+                                        <button class="save-edit-btn" onclick="saveAnswerEdit('${answer.id}', '${questionId}')">Save</button>
+                                        <button class="cancel-edit-btn" onclick="cancelAnswerEdit('${answer.id}')">Cancel</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    });
+                    
+                    // Update action buttons visibility for answers
+                    if (auth.currentUser) {
+                        setTimeout(() => {
+                            updateActionButtonsVisibility();
+                        }, 100);
+                    }
                 });
-                
-                // Update action buttons visibility for answers
-                if (auth.currentUser) {
-                    setTimeout(() => {
-                        updateActionButtonsVisibility();
-                    }, 100);
-                }
-            });
 
-            // Store unsubscribe function in a map using questionId as key
-            if (!window.unsubscribeAnswers) {
-                window.unsubscribeAnswers = new Map();
+                // Store unsubscribe function in a map using questionId as key
+                if (!window.unsubscribeAnswers) {
+                    window.unsubscribeAnswers = new Map();
+                }
+                window.unsubscribeAnswers.set(questionId, unsubscribe);
+                
+            } catch (error) {
+                console.error("Error loading answers:", error);
             }
-            window.unsubscribeAnswers.set(questionId, unsubscribe);
         }
 
         // Notification functions
