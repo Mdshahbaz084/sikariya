@@ -444,6 +444,16 @@
             .qa-container {
                 padding: 15px;
                 margin-bottom: 20px;
+                border-radius: 10px;
+            }
+            
+            .qa-header {
+                margin-bottom: 20px;
+            }
+            
+            .qa-subtitle {
+                font-size: 1em;
+                margin-bottom: 15px;
             }
             
             #questionForm {
@@ -454,68 +464,217 @@
             .input, .btn {
                 width: 100%;
                 box-sizing: border-box;
+                padding: 10px;
             }
             
             .question {
                 padding: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .question-text {
+                font-size: 14px;
             }
             
             .vote-buttons {
                 justify-content: center;
                 margin: 10px auto;
+                gap: 15px;
             }
             
             .vote-btn {
-                padding: 10px;  /* Larger touch targets for mobile */
-            }
-            
-            .question-metadata, .answer-metadata {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .question-actions, .answer-actions {
-                margin-top: 10px;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 5px;
+                padding: 8px;
+                font-size: 20px;
             }
             
             .share-buttons {
                 flex-wrap: nowrap;
                 justify-content: center;
+                gap: 8px;
                 margin: 10px 0;
             }
             
-            .share-btn, .edit-btn, .delete-btn {
-                margin: 5px;
-                padding: 8px 12px;
-                font-size: 14px;
+            .share-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
             
-            .search-form {
-                flex-direction: column;
-                margin-bottom: 15px;
+            .action-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
             }
             
-            .search-input, .search-select, .search-btn {
+            .edit-btn, .delete-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .answer-input {
                 width: 100%;
+                padding: 8px;
+                margin: 8px 0;
+            }
+            
+            .answer-btn {
+                width: 100%;
+                padding: 8px;
                 margin: 5px 0;
-                box-sizing: border-box;
             }
             
             .answers {
                 padding-left: 10px;
+                margin-top: 8px;
+            }
+            
+            .answer {
+                padding: 8px;
+                margin: 6px 0;
+            }
+            
+            .answer-text {
+                font-size: 14px;
+            }
+            
+            .search-container {
+                margin: 15px 0;
+            }
+            
+            #searchQuestions {
+                padding: 10px 35px 10px 12px;
+                font-size: 14px;
+            }
+            
+            .search-icon {
+                right: 10px;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .pagination-btn {
+                padding: 6px 12px;
+                font-size: 14px;
             }
             
             .notification {
-                width: 85%;
+                width: 90%;
                 max-width: 300px;
+                padding: 12px 15px;
             }
             
-            .user-profile-section {
+            .notification-title {
+                font-size: 14px;
+            }
+            
+            .notification-message {
+                font-size: 12px;
+            }
+            
+            .profile-section {
+                padding: 15px;
+            }
+            
+            .profile-header {
                 flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                margin: 0 0 10px 0;
+            }
+            
+            .profile-info h3 {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            .profile-info p {
+                font-size: 14px;
+            }
+            
+            .draft-indicator {
+                font-size: 11px;
+                margin-top: 3px;
+            }
+            
+            .draft-actions {
+                margin-top: 3px;
+            }
+            
+            .draft-btn {
+                font-size: 11px;
+                padding: 2px 4px;
+            }
+            
+            .edit-form {
+                margin-top: 8px;
+            }
+            
+            .edit-input {
+                padding: 6px;
+                font-size: 14px;
+            }
+            
+            .edit-actions {
+                gap: 5px;
+            }
+            
+            .save-edit-btn, .cancel-edit-btn {
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Additional mobile optimizations for very small screens */
+        @media (max-width: 480px) {
+            .qa-container {
+                padding: 10px;
+            }
+            
+            .question-text, .answer-text {
+                font-size: 13px;
+            }
+            
+            .share-buttons {
+                gap: 5px;
+            }
+            
+            .share-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+            
+            .vote-buttons {
+                gap: 10px;
+            }
+            
+            .vote-btn {
+                padding: 6px;
+                font-size: 18px;
+            }
+            
+            .notification {
+                width: 95%;
+                padding: 10px 12px;
+            }
+            
+            .profile-avatar {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .profile-info h3 {
+                font-size: 15px;
+            }
+            
+            .profile-info p {
+                font-size: 13px;
             }
         }
         
@@ -562,9 +721,13 @@
                 <li data-aos="fade-right" data-aos-delay="600"><a href="question-and-answer.html" class="active"><i class="material-icons">question_answer</i>Question And Answer</a></li>
             </ul>
             <div class="social-links" data-aos="fade-up">
-                <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                <h4>Share Website</h4>
+                <div class="share-buttons">
+                    <a href="javascript:void(0)" onclick="shareOnFacebook()" class="share-icon"><i class="fab fa-facebook"></i></a>
+                    <a href="javascript:void(0)" onclick="shareOnWhatsApp()" class="share-icon"><i class="fab fa-whatsapp"></i></a>
+                    <a href="javascript:void(0)" onclick="shareOnTwitter()" class="share-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="javascript:void(0)" onclick="copyToClipboard()" class="share-icon"><i class="fas fa-copy"></i></a>
+                </div>
             </div>
         </nav>
 
@@ -1773,6 +1936,37 @@ window.voteAnswer = async (answerId, voteType) => {
                 alert("Error submitting answer: " + error.message);
             }
         });
+
+
+
+        // Share functions
+        function shareOnFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareOnWhatsApp() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://wa.me/?text=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareOnTwitter() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://twitter.com/intent/tweet?url=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        function copyToClipboard() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification("Link Copied", "Website link copied to clipboard!");
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                alert("Could not copy link. Please try again.");
+            });
+        }
     </script>
+    
+        
+    
 </body>
 </html>
