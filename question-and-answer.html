@@ -196,31 +196,11 @@
         }
         
         .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
+            display: none;
         }
         
         .pagination-btn {
-            padding: 8px 15px;
-            background-color: var(--light-bg);
-            border: 1px solid var(--accent-color);
-            border-radius: 5px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .pagination-btn:hover, .pagination-btn.active {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        
-        .pagination-btn:disabled {
-            background-color: #f0f0f0;
-            color: #aaa;
-            border-color: #ddd;
-            cursor: not-allowed;
+            display: none;
         }
         
         .loading-indicator {
@@ -549,16 +529,6 @@
                 right: 10px;
             }
             
-            .pagination {
-                flex-wrap: wrap;
-                gap: 5px;
-            }
-            
-            .pagination-btn {
-                padding: 6px 12px;
-                font-size: 14px;
-            }
-            
             .notification {
                 width: 90%;
                 max-width: 300px;
@@ -628,6 +598,15 @@
             .save-edit-btn, .cancel-edit-btn {
                 padding: 4px 8px;
                 font-size: 12px;
+            }
+            
+            /* Removing pagination mobile styles */
+            .pagination {
+                display: none;
+            }
+            
+            .pagination-btn {
+                display: none;
             }
         }
         
@@ -786,11 +765,6 @@
                         
                             <div id="loading" class="loading-indicator" style="display: none;">
                                 <i class="material-icons">hourglass_empty</i> Loading...
-                            </div>
-                        
-                            <div id="pagination" class="pagination">
-                                <button id="prevPage" class="pagination-btn" disabled>Previous</button>
-                                <button id="nextPage" class="pagination-btn">Next</button>
                             </div>
                         
                             <!-- Notification element -->
@@ -1098,100 +1072,72 @@
         let currentPage = 1;
         const questionsPerPage = 5;
         
-        async function loadQuestions(direction = 'next') {
+        async function loadQuestions() {
             document.getElementById("loading").style.display = "block";
             
-            let q;
-            if (direction === 'next' && lastVisible) {
-                q = query(
+            try {
+                const q = query(
                     collection(db, "questions"), 
-                    orderBy("timestamp", "desc"),
-                    startAfter(lastVisible),
-                    limit(questionsPerPage)
+                    orderBy("timestamp", "desc")
                 );
-                currentPage++;
-            } else if (direction === 'prev' && firstVisible) {
-                // For simplicity, we'll restart from the beginning and skip forward
-                q = query(
-                    collection(db, "questions"), 
-                    orderBy("timestamp", "desc"),
-                    limit((currentPage - 1) * questionsPerPage)
-                );
-                currentPage--;
-            } else {
-                q = query(
-                    collection(db, "questions"), 
-                    orderBy("timestamp", "desc"),
-                    limit(questionsPerPage)
-                );
-                currentPage = 1;
-            }
 
-            const querySnapshot = await getDocs(q);
-            
-            if (querySnapshot.empty) {
-                document.getElementById("loading").style.display = "none";
-                if (direction === 'next') {
-                    document.getElementById("nextPage").disabled = true;
-                    currentPage--;
-                }
-                return;
-            }
-            
-            document.getElementById("questionsList").innerHTML = "";
-            
-            // Store first and last visible document for pagination
-            firstVisible = querySnapshot.docs[0];
-            lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-            
-            // Enable/disable pagination buttons
-            document.getElementById("prevPage").disabled = currentPage === 1;
-            document.getElementById("nextPage").disabled = querySnapshot.size < questionsPerPage;
-            
-            querySnapshot.forEach((doc) => {
-                const question = doc.data();
+                const querySnapshot = await getDocs(q);
                 
-                document.getElementById("questionsList").innerHTML += `
-                    <div class="question" id="question-${doc.id}">
-                        <div class="question-header">
-                            <small>${new Date(question.timestamp.toDate()).toLocaleString()}</small>
-                        </div>
-                        <p class="question-text"><strong>${question.user}:</strong> ${question.text}</p>
-                        <div class="vote-buttons">
-                            <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'up')"><i class="material-icons">thumb_up</i></button>
-                            <span class="vote-count" id="question-votes-${doc.id}">${question.votes || 0}</span>
-                            <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'down')"><i class="material-icons">thumb_down</i></button>
-                        </div>
-                        <div class="share-buttons">
-                            <button class="share-btn" onclick="shareQuestion('${doc.id}', 'copy')"><i class="material-icons">content_copy</i> Copy Link</button>
-                            <button class="share-btn" onclick="shareQuestion('${doc.id}', 'facebook')"><i class="material-icons">share</i> Facebook</button>
-                            <button class="share-btn" onclick="shareQuestion('${doc.id}', 'twitter')"><i class="material-icons">send</i> Twitter</button>
-                            <button class="share-btn" onclick="shareQuestion('${doc.id}', 'whatsapp')"><i class="material-icons">chat</i> WhatsApp</button>
-                        </div>
-                        <div class="action-buttons" id="question-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === question.userId || auth.currentUser.displayName === question.user) ? '' : 'style="display:none"'}>
-                            <button class="edit-btn" onclick="showEditQuestionForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
-                            <button class="delete-btn" onclick="deleteQuestion('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
-                        </div>
-                        <div class="edit-form" id="edit-question-form-${doc.id}">
-                            <textarea class="edit-input" id="edit-question-input-${doc.id}">${question.text}</textarea>
-                            <div class="edit-actions">
-                                <button class="save-edit-btn" onclick="saveQuestionEdit('${doc.id}')">Save</button>
-                                <button class="cancel-edit-btn" onclick="cancelQuestionEdit('${doc.id}')">Cancel</button>
+                if (querySnapshot.empty) {
+                    document.getElementById("loading").style.display = "none";
+                    return;
+                }
+                
+                document.getElementById("questionsList").innerHTML = "";
+                
+                querySnapshot.forEach((doc) => {
+                    const question = doc.data();
+                    
+                    document.getElementById("questionsList").innerHTML += `
+                        <div class="question" id="question-${doc.id}">
+                            <div class="question-header">
+                                <small>${new Date(question.timestamp.toDate()).toLocaleString()}</small>
                             </div>
+                            <p class="question-text"><strong>${question.user}:</strong> ${question.text}</p>
+                            <div class="vote-buttons">
+                                <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'up')"><i class="material-icons">thumb_up</i></button>
+                                <span class="vote-count" id="question-votes-${doc.id}">${question.votes || 0}</span>
+                                <button class="vote-btn" onclick="voteQuestion('${doc.id}', 'down')"><i class="material-icons">thumb_down</i></button>
+                            </div>
+                            <div class="share-buttons">
+                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'copy')"><i class="material-icons">content_copy</i> Copy Link</button>
+                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'facebook')"><i class="material-icons">share</i> Facebook</button>
+                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'twitter')"><i class="material-icons">send</i> Twitter</button>
+                                <button class="share-btn" onclick="shareQuestion('${doc.id}', 'whatsapp')"><i class="material-icons">chat</i> WhatsApp</button>
+                            </div>
+                            <div class="action-buttons" id="question-actions-${doc.id}" ${auth.currentUser && (auth.currentUser.uid === question.userId || auth.currentUser.displayName === question.user) ? '' : 'style="display:none"'}>
+                                <button class="edit-btn" onclick="showEditQuestionForm('${doc.id}')"><i class="material-icons">edit</i> Edit</button>
+                                <button class="delete-btn" onclick="deleteQuestion('${doc.id}')"><i class="material-icons">delete</i> Delete</button>
+                            </div>
+                            <div class="edit-form" id="edit-question-form-${doc.id}">
+                                <textarea class="edit-input" id="edit-question-input-${doc.id}">${question.text}</textarea>
+                                <div class="edit-actions">
+                                    <button class="save-edit-btn" onclick="saveQuestionEdit('${doc.id}')">Save</button>
+                                    <button class="cancel-edit-btn" onclick="cancelQuestionEdit('${doc.id}')">Cancel</button>
+                                </div>
+                            </div>
+                            <input type="text" id="answerInput-${doc.id}" class="answer-input" placeholder="Write an answer">
+                            <button class="answer-btn" onclick="submitAnswer('${doc.id}')">Submit</button>
+                            <div id="answers-${doc.id}" class="answers"></div>
                         </div>
-                        <input type="text" id="answerInput-${doc.id}" class="answer-input" placeholder="Write an answer">
-                        <button class="answer-btn" onclick="submitAnswer('${doc.id}')">Submit</button>
-                        <div id="answers-${doc.id}" class="answers"></div>
-                    </div>
-                `;
-                loadAnswers(doc.id);
-            });
-            
-            document.getElementById("loading").style.display = "none";
-            
-            // Update action buttons visibility after loading questions
-            if (auth.currentUser) {
-                updateActionButtonsVisibility();
+                    `;
+                    loadAnswers(doc.id);
+                });
+                
+                document.getElementById("loading").style.display = "none";
+                
+                // Update action buttons visibility after loading questions
+                if (auth.currentUser) {
+                    updateActionButtonsVisibility();
+                }
+            } catch (error) {
+                console.error("Error loading questions:", error);
+                document.getElementById("loading").style.display = "none";
             }
         }
 
@@ -1278,15 +1224,6 @@
                 }, 100);
             }
         }
-
-        // Set up pagination event listeners
-        document.getElementById("nextPage").addEventListener("click", () => {
-            loadQuestions('next');
-        });
-        
-        document.getElementById("prevPage").addEventListener("click", () => {
-            loadQuestions('prev');
-        });
 
         // Notification functions
         window.showNotification = (title, message) => {
