@@ -12,14 +12,7 @@ if ('serviceWorker' in navigator) {
         console.error('Main Service Worker registration failed:', error);
       });
       
-    // Register Firebase Messaging service worker
-    navigator.serviceWorker.register('./firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('Firebase Messaging Service Worker registered with scope:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('Firebase Messaging Service Worker registration failed:', error);
-      });
+    // Firebase Messaging service worker will be registered in the main HTML file
   });
 }
 
