@@ -1,5 +1,9 @@
 // Firebase Cloud Messaging Service Worker
 
+self.addEventListener('fetch', function(event) {
+  // For making sure service worker is properly registered
+});
+
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
@@ -20,10 +24,10 @@ const messaging = firebase.messaging();
 messaging.setBackgroundMessageHandler((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload.notification.title || 'Notification';
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: './image/icon1.png'
+    body: payload.notification.body || 'New message from Madrasa Sikariya',
+    icon: 'image/icon1.png'  // Updated path without leading slash
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
