@@ -1,14 +1,24 @@
 // PWA functionality for Madrasa Sikariya
 
-// Register Service Worker
+// Register Service Workers
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Register main service worker
     navigator.serviceWorker.register('../sw.js')
       .then((registration) => {
-        console.log('Service Worker registered successfully with scope:', registration.scope);
+        console.log('Main Service Worker registered successfully with scope:', registration.scope);
       })
       .catch((error) => {
-        console.error('Service Worker registration failed:', error);
+        console.error('Main Service Worker registration failed:', error);
+      });
+      
+    // Register Firebase Messaging service worker
+    navigator.serviceWorker.register('../firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log('Firebase Messaging Service Worker registered with scope:', registration.scope);
+      })
+      .catch((error) => {
+        console.error('Firebase Messaging Service Worker registration failed:', error);
       });
   });
 }
