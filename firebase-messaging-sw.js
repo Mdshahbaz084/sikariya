@@ -1,7 +1,7 @@
 // Firebase Cloud Messaging Service Worker
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
 // Firebase configuration
 firebase.initializeApp({
@@ -17,7 +17,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // Background message handler
-messaging.onBackgroundMessage((payload) => {
+messaging.setBackgroundMessageHandler((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
   const notificationTitle = payload.notification.title;
@@ -26,5 +26,5 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/image/icon1.png'
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 }); 
