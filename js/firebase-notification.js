@@ -33,28 +33,38 @@ export function requestNotificationPermission() {
     if (permission === 'granted') {
       console.log('Notification permission granted.');
       
-      // Get FCM registration token
-      getToken(messaging, { vapidKey: vapidKey })
-        .then((currentToken) => {
-          if (currentToken) {
-            // Save token to localStorage
-            localStorage.setItem(FCM_TOKEN_KEY, currentToken);
-            console.log('Token received:', currentToken);
-            
-            // Send token to your server
-            sendTokenToServer(currentToken);
-            
-            // Update UI to show user is subscribed
-            updateSubscriptionUI(true);
-          } else {
-            console.log('No registration token available. Request permission to generate one.');
-            updateSubscriptionUI(false);
-          }
-        })
-        .catch((err) => {
-          console.log('An error occurred while retrieving token. ', err);
-          updateSubscriptionUI(false);
+      // Make sure service worker is registered before getting token
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          console.log('Service worker is ready for messaging');
+          
+          // Get FCM registration token
+          getToken(messaging, { 
+            vapidKey: vapidKey,
+            serviceWorkerRegistration: registration
+          })
+            .then((currentToken) => {
+              if (currentToken) {
+                // Save token to localStorage
+                localStorage.setItem(FCM_TOKEN_KEY, currentToken);
+                console.log('Token received:', currentToken);
+                
+                // Send token to your server
+                sendTokenToServer(currentToken);
+                
+                // Update UI to show user is subscribed
+                updateSubscriptionUI(true);
+              } else {
+                console.log('No registration token available. Request permission to generate one.');
+                updateSubscriptionUI(false);
+              }
+            })
+            .catch((err) => {
+              console.log('An error occurred while retrieving token. ', err);
+              updateSubscriptionUI(false);
+            });
         });
+      }
     } else {
       console.log('Unable to get permission to notify.');
       updateSubscriptionUI(false);
