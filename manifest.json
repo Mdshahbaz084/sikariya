@@ -3,7 +3,7 @@
   "short_name": "Madrasa",
   "description": "Welcome to Madrasa Sikariya - Darul Uloom Faizain-E-Tajushsharia Sikariya",
   "start_url": "./index.html",
-  "scope": ".",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a3a6d",
@@ -14,5 +14,5 @@
       "type": "image/png"
     }
   ],
-  "gcm_sender_id": "1066102927865"
+  "gcm_sender_id": "103953800507"
 }
