@@ -289,6 +289,19 @@
         // Request permission and handle token
         const messaging = firebase.messaging();
         
+        // Register the Service Worker for FCM
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./firebase-messaging-sw.js')
+            .then(function(registration) {
+                // Successfully registered service worker
+                messaging.useServiceWorker(registration);
+                console.log('Firebase Messaging Service Worker registered with scope:', registration.scope);
+            })
+            .catch(function(err) {
+                console.error('Service Worker registration error:', err);
+            });
+        }
+        
         // DOM content loaded
         document.addEventListener('DOMContentLoaded', function() {
             const subscribeButton = document.getElementById('notification-subscribe');
