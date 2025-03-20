@@ -1,0 +1,112 @@
+/* CSS for Firebase Push Notifications */
+
+/* Subscribe Button */
+.notification-btn {
+  display: inline-block;
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.notification-btn:hover {
+  background-color: #45a049;
+}
+
+.notification-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.notification-btn.subscribed {
+  background-color: #3F51B5;
+}
+
+/* Custom Notification */
+.custom-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-width: 350px;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 0;
+  z-index: 10000;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.custom-notification.show {
+  transform: translateX(0);
+}
+
+.notification-content {
+  padding: 15px;
+  border-left: 4px solid #4CAF50;
+}
+
+.notification-content h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 18px;
+  padding-right: 20px;
+}
+
+.notification-content p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Notification subscribe section */
+.notification-section {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border-left: 4px solid #3F51B5;
+}
+
+.notification-section h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.notification-section p {
+  margin-bottom: 15px;
+  color: #666;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .custom-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+} 
