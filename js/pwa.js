@@ -4,7 +4,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // Register main service worker
-    navigator.serviceWorker.register('../sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then((registration) => {
         console.log('Main Service Worker registered successfully with scope:', registration.scope);
       })
@@ -13,7 +13,7 @@ if ('serviceWorker' in navigator) {
       });
       
     // Register Firebase Messaging service worker
-    navigator.serviceWorker.register('../firebase-messaging-sw.js')
+    navigator.serviceWorker.register('./firebase-messaging-sw.js')
       .then((registration) => {
         console.log('Firebase Messaging Service Worker registered with scope:', registration.scope);
       })
