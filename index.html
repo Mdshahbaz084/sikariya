@@ -7,6 +7,7 @@
     <link rel="icon" href="image/icon1.png">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/pwa.css">
+    <link rel="stylesheet" href="css/notification.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -43,7 +44,8 @@
                 <li data-aos="fade-right" data-aos-delay="300"><a href="#media"><i class="material-icons">perm_media</i>Media</a></li>
                 <li data-aos="fade-right" data-aos-delay="400"><a href="#donation"><i class="material-icons">volunteer_activism</i>Donation</a></li>
                 <li data-aos="fade-right" data-aos-delay="500"><a href="#contact-us"><i class="material-icons">contact_mail</i>Contact Us</a></li>
-                <li data-aos="fade-right" data-aos-delay="600"><a href="question-and-answer.html"><i class="material-icons">question_answer</i>Question And Answer</a></li>
+                <li data-aos="fade-right" data-aos-delay="600"><a href="question-and-answer.html"><i class="material-icons">question_answer</i>Question  Answer</a></li>
+                <li data-aos="fade-right" data-aos-delay="700"><a href="#notifications"><i class="material-icons">notifications</i>Notifications</a></li>
             </ul>
             <div class="social-links" data-aos="fade-up">
                 <h4>Share Website</h4>
@@ -64,37 +66,53 @@
                 <h1>Welcome to Madrasa Sikariya</h1>
             </div>
             
+            <!-- New notification section -->
+            <section id="notifications" class="section" data-aos="fade-up">
+                <h2>Notifications</h2>
+                <div class="content">
+                    <div class="section-header">
+                        <h3>Madrasa Updates</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="notification-section">
+                            <h3>Madrasa की अपडेट्स पाएं</h3>
+                            <p>अपने मोबाइल या कंप्यूटर पर Madrasa Sikariya के सभी अपडेट्स और महत्वपूर्ण सूचनाएं पाने के लिए नोटिफिकेशन को एनेबल करें।</p>
+                            <button id="notification-subscribe" class="notification-btn">नोटिफिकेशन के लिए सब्सक्राइब करें</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
             <section id="media" class="section" data-aos="fade-up">
                 <h2>Media</h2>
                 <div class="content">
                     <div class="section-header">
                         <h3>Madrasa Ki Tasveeren</h3>
-                        <p class="section-subtitle">Experience our madrasa through these visual moments</p>
                     </div>
                     <div class="section-body">
                         <div class="media-container">
                             <div class="slideshow-container">
                                 <div class="mySlides fade">
                                     <img src="image slide/inside front.jpg" alt="Madrasa Building">
-                                    <div class="slide-caption">Madrasa Main Building</div>
+                                    <!-- <div class="slide-caption">Madrasa Main Building</div> -->
                                 </div>
 
                                 <div class="mySlides fade">
                                     <img src="image slide/inside intro.jpg" alt="Students Learning">
-                                    <div class="slide-caption">Students Learning Environment</div>
+                                    <!-- <div class="slide-caption">Students Learning Environment</div> -->
                                 </div>
 
                                 <div class="mySlides fade">
                                     <img src="image slide/inside view.jpg" alt="Prayer Area">
-                                    <div class="slide-caption">Interior View</div>
+                                    <!-- <div class="slide-caption">Interior View</div> -->
                                 </div>
                                 <div class="mySlides fade">
                                     <img src="image slide/inside2.jpg" alt="Prayer Area">
-                                    <div class="slide-caption">Study & Prayer Area</div>
+                                    <!-- <div class="slide-caption">Study & Prayer Area</div> -->
                                 </div>
                                 <div class="mySlides fade">
                                     <img src="image slide/inside4.jpg" alt="Prayer Area">
-                                    <div class="slide-caption">Community Space</div>
+                                    <!-- <div class="slide-caption">Community Space</div> -->
                                 </div>
 
                                 <!-- Navigation buttons -->
@@ -249,6 +267,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="js/main.js"></script>
     <script src="js/pwa.js"></script>
+    <!-- Firebase scripts -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.19.1/firebase-messaging.js"></script>
+    <script type="module" src="js/firebase-notification.js"></script>
     <script>
         AOS.init({
             duration: 1000,
