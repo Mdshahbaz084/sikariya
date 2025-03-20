@@ -29,6 +29,10 @@
     <link rel="apple-touch-icon" sizes="152x152" href="image/icon1.png">
     <link rel="apple-touch-icon" sizes="180x180" href="image/icon1.png">
     <link rel="apple-touch-icon" sizes="167x167" href="image/icon1.png">
+    
+    <!-- Firebase scripts (moved to head) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 </head>
 <body>
     <section id="home"></section>
@@ -267,11 +271,134 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="js/main.js"></script>
     <script src="js/pwa.js"></script>
-    <!-- Firebase scripts -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.19.1/firebase-messaging.js"></script>
-    <script type="module" src="js/firebase-notification.js"></script>
+    <!-- Firebase script -->
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyBfqQkLMdirE1s3QDAU-k8kZJDSJ-AHfxI",
+          authDomain: "madrsa-sikariya.firebaseapp.com",
+          projectId: "madrsa-sikariya", 
+          storageBucket: "madrsa-sikariya.firebasestorage.app",
+          messagingSenderId: "1066102927865",
+          appId: "1:1066102927865:web:d5e649be4178d363408d28",
+          measurementId: "G-3S96TVYFJC"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // Request permission and handle token
+        const messaging = firebase.messaging();
+        
+        // DOM content loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const subscribeButton = document.getElementById('notification-subscribe');
+            if (subscribeButton) {
+                subscribeButton.addEventListener('click', requestNotificationPermission);
+            }
+            
+            // Check if already subscribed
+            const token = localStorage.getItem('fcm_token');
+            updateSubscriptionUI(!!token);
+        });
+        
+        // Request permission for notifications
+        function requestNotificationPermission() {
+            console.log('Requesting notification permission...');
+            
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    console.log('Notification permission granted.');
+                    
+                    // Get token
+                    messaging.getToken({
+                        vapidKey: "BClpcTQygEYX1ueX4n8GTMN0UmSsaeM1JwpbRoI81WxOaHGB4gQHJl-bNiyBJmp_c5CryDL0NGiWAd2a7z3CpB4"
+                    }).then((token) => {
+                        if (token) {
+                            console.log('Token received:', token);
+                            localStorage.setItem('fcm_token', token);
+                            updateSubscriptionUI(true);
+                        } else {
+                            console.log('No token received');
+                            updateSubscriptionUI(false);
+                        }
+                    }).catch((err) => {
+                        console.error('Error getting token:', err);
+                        updateSubscriptionUI(false);
+                    });
+                } else {
+                    console.log('Permission denied');
+                    updateSubscriptionUI(false);
+                }
+            });
+        }
+        
+        // Handle foreground messages
+        messaging.onMessage((payload) => {
+            console.log('Message received:', payload);
+            showCustomNotification(
+                payload.notification.title, 
+                payload.notification.body
+            );
+        });
+        
+        // Show custom notification
+        function showCustomNotification(title, body) {
+            const notificationElement = document.createElement('div');
+            notificationElement.className = 'custom-notification';
+            
+            notificationElement.innerHTML = `
+                <div class="notification-content">
+                <h4>${title}</h4>
+                <p>${body}</p>
+                <button class="close-btn">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notificationElement);
+            
+            // Add fade-in animation
+            setTimeout(() => {
+                notificationElement.classList.add('show');
+            }, 100);
+            
+            // Add event listener to close button
+            const closeBtn = notificationElement.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => {
+                notificationElement.classList.remove('show');
+                setTimeout(() => {
+                document.body.removeChild(notificationElement);
+                }, 300);
+            });
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(notificationElement)) {
+                notificationElement.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notificationElement)) {
+                    document.body.removeChild(notificationElement);
+                    }
+                }, 300);
+                }
+            }, 5000);
+        }
+        
+        // Update UI based on subscription status
+        function updateSubscriptionUI(isSubscribed) {
+            const subscribeButton = document.getElementById('notification-subscribe');
+            if (!subscribeButton) return;
+            
+            if (isSubscribed) {
+                subscribeButton.textContent = 'आप नोटिफिकेशन प्राप्त कर रहे हैं';
+                subscribeButton.classList.add('subscribed');
+                subscribeButton.disabled = true;
+            } else {
+                subscribeButton.textContent = 'नोटिफिकेशन के लिए सब्सक्राइब करें';
+                subscribeButton.classList.remove('subscribed');
+                subscribeButton.disabled = false;
+            }
+        }
+        
         AOS.init({
             duration: 1000,
             once: true,
